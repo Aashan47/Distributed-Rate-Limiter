@@ -1,0 +1,73 @@
+{
+  "uid": "rate-limiter",
+  "title": "Rate Limiter",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Decisions per second (rule)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (rule, decision) (rate(ratelimiter_requests_total[1m]))",
+          "legendFormat": "{{rule}} / {{decision}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Allowed vs Denied (global)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (decision) (rate(ratelimiter_requests_total[1m]))",
+          "legendFormat": "{{decision}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "p99 decision latency",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, rule) (rate(ratelimiter_decision_latency_seconds_bucket[5m])))",
+          "legendFormat": "{{rule}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "type": "stat",
+      "title": "Active rules",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "ratelimiter_active_rules" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Redis errors (5m)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        { "expr": "increase(ratelimiter_redis_errors_total[5m])" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Deny rate (% of decisions)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(ratelimiter_requests_total{decision=\"denied\"}[1m])) / sum(rate(ratelimiter_requests_total[1m]))",
+          "legendFormat": "denied %"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    }
+  ]
+}

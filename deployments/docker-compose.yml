@@ -1,0 +1,57 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  limiter:
+    build:
+      context: ..
+      dockerfile: deployments/docker/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      # Override the config file's redis.addr by mounting a tweaked rules.yaml.
+      TZ: UTC
+    volumes:
+      - ./config/rules.compose.yaml:/etc/rate-limiter/rules.yaml:ro
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/server", "-h"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9091:9090"
+    depends_on:
+      - limiter
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

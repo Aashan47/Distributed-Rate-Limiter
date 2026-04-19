@@ -1,0 +1,47 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/aashan47/distributed-rate-limiter
+  tag: ""  # defaults to Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 8080
+  grpcPort: 9090
+
+redis:
+  addr: "redis-master:6379"
+  password: ""
+  db: 0
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+serviceMonitor:
+  enabled: false
+  interval: 15s
+
+rules:
+  - name: login
+    limit: 5
+    window: 60s
+  - name: api
+    limit: 1000
+    window: 60s
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

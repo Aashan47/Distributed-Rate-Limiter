@@ -1,0 +1,21 @@
+server:
+  grpc_addr: ":9090"
+  http_addr: ":8080"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+rules:
+  - name: "login"
+    limit: 5
+    window: 60s
+
+  - name: "api"
+    limit: 1000
+    window: 60s
+
+  - name: "expensive_read"
+    limit: 10
+    window: 1s

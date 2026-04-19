@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rate-limiter
+description: Distributed rate limiter (sliding window log) backed by Redis.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package ratelimiter.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+service RateLimiterService {
+  rpc Allow(AllowRequest) returns (AllowResponse) {
+    option (google.api.http) = {
+      post: "/v1/allow"
+      body: "*"
+    };
+  }
+
+  rpc AllowN(AllowNRequest) returns (AllowNResponse) {
+    option (google.api.http) = {
+      post: "/v1/allow-n"
+      body: "*"
+    };
+  }
+
+  rpc GetRule(GetRuleRequest) returns (GetRuleResponse) {
+    option (google.api.http) = {
+      get: "/v1/rules/{name}"
+    };
+  }
+}
+
+message AllowRequest {
+  string key = 1;
+  string rule = 2;
+}
+
+message AllowNRequest {
+  string key = 1;
+  string rule = 2;
+  uint32 cost = 3;
+}
+
+message Decision {
+  bool allowed = 1;
+  uint32 remaining = 2;
+  google.protobuf.Timestamp reset_at = 3;
+  google.protobuf.Duration retry_after = 4;
+}
+
+message AllowResponse {
+  Decision decision = 1;
+}
+
+message AllowNResponse {
+  Decision decision = 1;
+}
+
+message GetRuleRequest {
+  string name = 1;
+}
+
+message GetRuleResponse {
+  Rule rule = 1;
+}
+
+message Rule {
+  string name = 1;
+  uint32 limit = 2;
+  google.protobuf.Duration window = 3;
+  string algorithm = 4;
+}

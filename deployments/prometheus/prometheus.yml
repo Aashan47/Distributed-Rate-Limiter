@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "rate-limiter"
+    dns_sd_configs:
+      - names: ["limiter"]
+        type: A
+        port: 8080
+    metrics_path: /metrics
